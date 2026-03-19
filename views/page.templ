@@ -1,0 +1,95 @@
+package views
+
+templ Base(content templ.Component) {
+	<!DOCTYPE html>
+	<html>
+
+		<head> 
+    			<link hx-preserve="true" rel="stylesheet" href="/public/styles.css">
+			<script hx-preserve="true" src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.8/dist/htmx.min.js" integrity="sha384-/TgkGk7p307TH7EXJDuUlgG3Ce1UVolAOFopFekQkkXihi5u/6OCvVKyz1W+idaz" crossorigin="anonymous"></script>
+    <script hx-preserve src="https://cdn.jsdelivr.net/npm/htmx-ext-head-support@2.0.5" integrity="sha384-cvMqHzjCJsOHgGuyB3sWXaUSv/Krm0BdzjuI1rtkjCbL1l1oHJx+cHyVRJhyuEz0" crossorigin="anonymous"></script>
+			<style hx-preserve="true" >
+				#container {
+					border: 2px solid black;
+				}
+			</style>
+		</head>
+
+		<body hx-boost="true" hx-ext="head-support">
+			<div id="page">
+				@content
+			</div>
+		</body>
+	</html>
+}
+
+
+templ Page(content templ.Component, username string) {
+		<div>username: { username }</div>
+		<div id="content">
+		@content
+		</div>
+}
+
+
+templ Users(component templ.Component) {
+	<div>
+		<div>users</div>
+		<a href="/users/username">username</a>
+		<a href="/users/age">age</a>
+		<a href="/songs/yesterday/stats">yesterday</a>
+		<a href="/songs/blackbird">blackbird</a>
+		@component
+	</div>
+}
+
+templ Username() {
+	<div id="users-component">username</div>
+}
+
+templ Age() {
+	<div id="users-component" >26</div>
+}
+
+
+templ Hi() {
+	<div>
+		<a href="/users/username">go to username</a>
+	</div>
+}
+
+templ YesterdayStats() {
+	<div id="yesterday-component">stats!</div> 
+}
+
+
+templ YesterdayArtwork() {
+	<div id="yesterday-component">artwork!</div> 
+}
+
+templ Yesterday(c templ.Component) {
+	<div id="songs-component"> 
+		yesterday
+		<a href="/songs/yesterday/stats">stats</a>
+		<a href="/songs/yesterday/artwork">artwork</a>
+		@c
+	</div>
+}
+
+
+templ Blackbird() {
+	<div id="songs-component">blackbird</div>
+}
+
+templ Songs(component templ.Component) {
+	<div>
+		<div>songs</div>
+		<a href="/users/username">username</a>
+		<a href="/users/age">age</a>
+		<a href="/songs/yesterday/stats">yesterday</a>
+		<a href="/songs/blackbird">blackbird</a>
+		@component
+	</div>
+
+}
+
