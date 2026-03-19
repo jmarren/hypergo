@@ -34,7 +34,8 @@ templ Page(content templ.Component, username string) {
 
 templ Users(component templ.Component) {
 	<div>
-		<div>users</div>
+		<strong>users</strong>
+		<br/>
 		<a href="/users/username">username</a>
 		<a href="/users/age">age</a>
 		<a href="/songs/yesterday/stats">yesterday</a>
@@ -83,7 +84,7 @@ templ Blackbird() {
 
 templ Songs(component templ.Component) {
 	<div>
-		<div>songs</div>
+		<strong>songs</strong><br/>
 		<a href="/users/username">username</a>
 		<a href="/users/age">age</a>
 		<a href="/songs/yesterday/stats">yesterday</a>

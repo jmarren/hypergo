@@ -116,7 +116,7 @@ func Users(component templ.Component) templ.Component {
 			templ_7745c5c3_Var4 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<div><div>users</div><a href=\"/users/username\">username</a> <a href=\"/users/age\">age</a> <a href=\"/songs/yesterday/stats\">yesterday</a> <a href=\"/songs/blackbird\">blackbird</a>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<div><strong>users</strong><br><a href=\"/users/username\">username</a> <a href=\"/users/age\">age</a> <a href=\"/songs/yesterday/stats\">yesterday</a> <a href=\"/songs/blackbird\">blackbird</a>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -364,7 +364,7 @@ func Songs(component templ.Component) templ.Component {
 			templ_7745c5c3_Var12 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "<div><div>songs</div><a href=\"/users/username\">username</a> <a href=\"/users/age\">age</a> <a href=\"/songs/yesterday/stats\">yesterday</a> <a href=\"/songs/blackbird\">blackbird</a>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "<div><strong>songs</strong><br><a href=\"/users/username\">username</a> <a href=\"/users/age\">age</a> <a href=\"/songs/yesterday/stats\">yesterday</a> <a href=\"/songs/blackbird\">blackbird</a>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

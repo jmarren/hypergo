@@ -10,7 +10,23 @@ import (
 type RW struct {
 	http.ResponseWriter
 	*http.Request
-	target string
+	target     string
+	routePath  string
+	currentURL *url.URL
+}
+
+func newRW(w http.ResponseWriter, r *http.Request, target string) *RW {
+	url, _ := url.Parse(r.Header.Get("HX-Current-Url"))
+	return &RW{
+		ResponseWriter: w,
+		Request:        r,
+		currentURL:     url,
+		target:         target,
+	}
+}
+
+func (rw *RW) StripPrefix(prefix string) {
+	strings.CutPrefix(rw.routePath, prefix)
 }
 
 // Request Headers
@@ -68,8 +84,8 @@ func (rw *RW) IsHxRequest() bool {
 	return rw.Request.Header.Get("HX-Request") == "true"
 }
 
-func (rw *RW) CurrentUrl() string {
-	return rw.Request.Header.Get("HX-Current-Url")
+func (rw *RW) CurrentUrl() *url.URL {
+	return rw.currentURL
 }
 
 // Custom Headers
@@ -86,7 +102,6 @@ func (rw *RW) ExecutedScripts() []string {
 
 // Other
 func (rw *RW) PathHasPrefix(subPath string) bool {
-	url, _ := url.Parse(rw.CurrentUrl())
-	path := url.Path
+	path := rw.CurrentUrl().Path
 	return strings.HasPrefix(path, subPath)
 }

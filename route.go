@@ -2,6 +2,7 @@ package hypergo
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/a-h/templ"
 )
@@ -14,40 +15,34 @@ type Route struct {
 	Parent           *Router
 	Path             string
 	Method           string
-	Handler          Handler
 	Middleware       []Middleware
-	IsComponent      bool
 	ComponentHandler ComponentHandler
 	Target           string
 }
 
-func makeRWHandler(h Handler) http.HandlerFunc {
+func makeRWHandler(h Handler, target string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		rw := &RW{
-			ResponseWriter: w,
-			Request:        r,
-		}
+		rw := newRW(w, r, target)
 		h(rw)
 	}
 }
 
 func (route *Route) ComponentHTTPHandler() http.HandlerFunc {
 	handler := func(rw *RW) error {
-
 		rw.target = route.Target
 
 		// invoke the componentHandler
 		component := route.ComponentHandler(rw)
 
+		rw.URL.Path, _ = strings.CutSuffix(rw.URL.Path, route.Path)
 		// wrap the component up the tree
 		parent := route.Parent
 
-		for parent != nil {
-			if parent.ShouldWrapPrefix {
-				component = parent.PrefixWrapper()(rw, component)
-			} else {
-				component = parent.Wrapper(rw, component)
-			}
+		currentUrl := rw.CurrentUrl().Path
+
+		for rw.URL.Path != currentUrl {
+			component = parent.Wrapper(rw, component)
+			rw.URL.Path, _ = strings.CutSuffix(rw.URL.Path, parent.Path)
 			parent = parent.Parent
 		}
 
@@ -64,7 +59,7 @@ func (route *Route) ComponentHTTPHandler() http.HandlerFunc {
 	}
 
 	// return a func that creates rw and invokes the handler with it
-	return makeRWHandler(handler)
+	return makeRWHandler(handler, route.Target)
 }
 
 func (route *Route) AllMiddleware() []Middleware {
@@ -77,17 +72,6 @@ func (route *Route) AllMiddleware() []Middleware {
 		parent = parent.Parent
 	}
 	return middleware
-}
-
-func (route *Route) HTTPHandler() http.HandlerFunc {
-	handler := route.Handler
-
-	for _, m := range route.AllMiddleware() {
-		handler = m(handler)
-	}
-
-	return makeRWHandler(handler)
-
 }
 
 func (route *Route) FullPath() string {

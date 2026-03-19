@@ -54,11 +54,6 @@ func UsersHandler(rw *hypergo.RW) error {
 	return nil
 }
 
-// func UsernameHandler(rw *hypergo.RW) error {
-// 	rw.ResponseWriter.Write([]byte("username"))
-// 	return nil
-// }
-
 func RegisterRouter(mux *http.ServeMux, router *hypergo.Router) {
 
 	for _, route := range router.Routes {
@@ -137,84 +132,61 @@ func main() {
 
 	app := &hypergo.HyperGo{
 		Router: &hypergo.Router{
-			Wrapper:          WrapPage,
-			ShouldWrapPrefix: false,
-			Target:           "body",
-			Path:             "",
-			Middleware:       []hypergo.Middleware{LoggerOne, LoggerTwo},
-			Routes: []*hypergo.Route{
-				{
-					Path:        "/hi",
-					Method:      "GET",
-					Handler:     HiHandler,
-					IsComponent: false,
-					Middleware:  []hypergo.Middleware{HiHandlerMiddleware},
-				},
-			},
+			Wrapper:    WrapPage,
+			Target:     "body",
+			Path:       "",
+			Middleware: []hypergo.Middleware{LoggerOne, LoggerTwo},
+			Routes:     []*hypergo.Route{},
 			SubRouters: []*hypergo.Router{
 				{
-					Wrapper:          WrapUsers,
-					ShouldWrapPrefix: true,
-					Target:           "#content",
-					Path:             "/users",
-					Middleware:       []hypergo.Middleware{UsersMiddleware},
+					Wrapper:    WrapUsers,
+					Target:     "#content",
+					Path:       "/users",
+					Middleware: []hypergo.Middleware{UsersMiddleware},
 					Routes: []*hypergo.Route{
-						{
-							Path:        "",
-							Method:      "GET",
-							Handler:     UsersHandler,
-							IsComponent: false,
-						},
 						{
 							Path:             "/username",
 							Method:           "GET",
 							ComponentHandler: UsernameHandler,
 							Target:           "#users-component",
-							IsComponent:      true,
 						},
 						{
 							Path:             "/age",
 							Method:           "GET",
 							Target:           "#users-component",
 							ComponentHandler: AgeHandler,
-							IsComponent:      true,
 						},
 					},
 				},
 				{
-					Wrapper:          WrapSongs,
-					ShouldWrapPrefix: true,
-					Target:           "#content",
-					Path:             "/songs",
-					Middleware:       []hypergo.Middleware{UsersMiddleware},
+					Wrapper:    WrapSongs,
+					Target:     "#content",
+					Path:       "/songs",
+					Middleware: []hypergo.Middleware{UsersMiddleware},
 					Routes: []*hypergo.Route{
 						{
 							Path:             "/blackbird",
 							Method:           "GET",
 							Target:           "#songs-component",
 							ComponentHandler: BlackbirdHandler,
-							IsComponent:      true,
 						},
 					},
 					SubRouters: []*hypergo.Router{
 						{
-							Wrapper:          WrapYesterday,
-							Path:             "/yesterday",
-							ShouldWrapPrefix: true,
-							Target:           "#songs-component",
+							Wrapper: WrapYesterday,
+							Path:    "/yesterday",
+							Target:  "#songs-component",
 							Routes: []*hypergo.Route{
 								{
 									Path:             "/stats",
 									Method:           "GET",
 									ComponentHandler: YesterdayStatsHandler,
-									IsComponent:      true,
 									Target:           "#yesterday-component",
 								},
 								{
 									Path:             "/artwork",
 									Method:           "GET",
 									ComponentHandler: YesterdayArtworkHandler,
-									IsComponent:      true,
 									Target:           "#yesterday-component",
 								},
 							},
