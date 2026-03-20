@@ -27,6 +27,41 @@ func makeRWHandler(h Handler, target string) http.HandlerFunc {
 	}
 }
 
+func (route *Route) Use(m Middleware) {
+	route.Middleware = append([]Middleware{m}, route.Middleware...)
+}
+
+// base, users, ...
+func (route *Route) ancestors() []*Router {
+	ancestors := []*Router{}
+
+	curr := route.Parent
+
+	for curr != nil {
+		ancestors = append([]*Router{curr}, ancestors...)
+		curr = curr.Parent
+	}
+
+	return ancestors
+}
+
+func (route *Route) Wrappers(currentPath string) []Wrapper {
+	wrappers := []Wrapper{}
+	found := false
+
+	ancestors := route.ancestors()
+
+	for _, router := range ancestors {
+		currentPath, found = strings.CutPrefix(currentPath, router.Path)
+		if !found || currentPath == "" {
+			wrappers = append([]Wrapper{router.Wrapper}, wrappers...)
+		}
+	}
+
+	return wrappers
+
+}
+
 func (route *Route) ComponentHTTPHandler() http.HandlerFunc {
 	handler := func(rw *RW) error {
 		rw.target = route.Target
@@ -34,16 +69,10 @@ func (route *Route) ComponentHTTPHandler() http.HandlerFunc {
 		// invoke the componentHandler
 		component := route.ComponentHandler(rw)
 
-		rw.URL.Path, _ = strings.CutSuffix(rw.URL.Path, route.Path)
-		// wrap the component up the tree
-		parent := route.Parent
+		wrappers := route.Wrappers(rw.CurrentUrl().Path)
 
-		currentUrl := rw.CurrentUrl().Path
-
-		for rw.URL.Path != currentUrl {
-			component = parent.Wrapper(rw, component)
-			rw.URL.Path, _ = strings.CutSuffix(rw.URL.Path, parent.Path)
-			parent = parent.Parent
+		for _, wrapper := range wrappers {
+			component = wrapper(rw, component)
 		}
 
 		if rw.target != "" {
@@ -54,24 +83,12 @@ func (route *Route) ComponentHTTPHandler() http.HandlerFunc {
 	}
 
 	// apply all middleware to the handler
-	for _, m := range route.AllMiddleware() {
+	for _, m := range route.Middleware {
 		handler = m(handler)
 	}
 
 	// return a func that creates rw and invokes the handler with it
 	return makeRWHandler(handler, route.Target)
-}
-
-func (route *Route) AllMiddleware() []Middleware {
-	middleware := route.Middleware
-
-	parent := route.Parent
-
-	for parent != nil {
-		middleware = append(middleware, parent.Middleware...)
-		parent = parent.Parent
-	}
-	return middleware
 }
 
 func (route *Route) FullPath() string {

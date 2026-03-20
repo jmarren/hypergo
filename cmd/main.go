@@ -57,11 +57,7 @@ func UsersHandler(rw *hypergo.RW) error {
 func RegisterRouter(mux *http.ServeMux, router *hypergo.Router) {
 
 	for _, route := range router.Routes {
-		if route.IsComponent {
-			mux.Handle(route.FullPath(), route.ComponentHTTPHandler())
-		} else {
-			mux.Handle(route.FullPath(), route.HTTPHandler())
-		}
+		mux.Handle(route.FullPath(), route.ComponentHTTPHandler())
 	}
 
 	for _, subrouter := range router.SubRouters {
@@ -85,10 +81,6 @@ func WrapBase(rw *hypergo.RW, component templ.Component) templ.Component {
 }
 
 func WrapPage(rw *hypergo.RW, component templ.Component) templ.Component {
-
-	if rw.IsHxRequest() {
-		return component
-	}
 	return views.Base(views.Page(component, "john"))
 }
 
@@ -131,75 +123,113 @@ func EmptyWrap(rw *hypergo.RW, component templ.Component) templ.Component {
 func main() {
 
 	app := &hypergo.HyperGo{
-		Router: &hypergo.Router{
-			Wrapper:    WrapPage,
-			Target:     "body",
-			Path:       "",
-			Middleware: []hypergo.Middleware{LoggerOne, LoggerTwo},
-			Routes:     []*hypergo.Route{},
-			SubRouters: []*hypergo.Router{
-				{
-					Wrapper:    WrapUsers,
-					Target:     "#content",
-					Path:       "/users",
-					Middleware: []hypergo.Middleware{UsersMiddleware},
-					Routes: []*hypergo.Route{
-						{
-							Path:             "/username",
-							Method:           "GET",
-							ComponentHandler: UsernameHandler,
-							Target:           "#users-component",
-						},
-						{
-							Path:             "/age",
-							Method:           "GET",
-							Target:           "#users-component",
-							ComponentHandler: AgeHandler,
-						},
-					},
-				},
-				{
-					Wrapper:    WrapSongs,
-					Target:     "#content",
-					Path:       "/songs",
-					Middleware: []hypergo.Middleware{UsersMiddleware},
-					Routes: []*hypergo.Route{
-						{
-							Path:             "/blackbird",
-							Method:           "GET",
-							Target:           "#songs-component",
-							ComponentHandler: BlackbirdHandler,
-						},
-					},
-					SubRouters: []*hypergo.Router{
-						{
-							Wrapper: WrapYesterday,
-							Path:    "/yesterday",
-							Target:  "#songs-component",
-							Routes: []*hypergo.Route{
-								{
-									Path:             "/stats",
-									Method:           "GET",
-									ComponentHandler: YesterdayStatsHandler,
-									Target:           "#yesterday-component",
-								},
-								{
-									Path:             "/artwork",
-									Method:           "GET",
-									ComponentHandler: YesterdayArtworkHandler,
-									Target:           "#yesterday-component",
-								},
-							},
-						},
-					},
-				},
-			},
-		},
+		Router: hypergo.NewRouter(),
 	}
+
+	app.Router.Use(LoggerOne)
+	app.Router.Use(LoggerTwo)
+	app.Router.Wrap(WrapPage)
+
+	usersRouter := hypergo.NewRouter()
+	usersRouter.SetTarget("#content")
+
+	usersRouter.Wrap(WrapUsers)
+
+	usersRouter.Get("username", "#users-component", UsernameHandler)
+	usersRouter.Get("age", "#users-component", AgeHandler)
+
+	songsRouter := hypergo.NewRouter()
+
+	songsRouter.Wrap(WrapSongs)
+
+	songsRouter.SetTarget("#content")
+	songsRouter.Get("blackbird", "#songs-component", BlackbirdHandler)
+
+	YesterdayRouter := hypergo.NewRouter()
+
+	YesterdayRouter.Wrap(WrapYesterday)
+
+	YesterdayRouter.SetTarget("#songs-component")
+	YesterdayRouter.Get("stats", "#yesterday-component", YesterdayStatsHandler)
+	YesterdayRouter.Get("artwork", "#yesterday-component", YesterdayArtworkHandler)
+
+	songsRouter.SubRouter("yesterday/", YesterdayRouter)
+
+	// songsRouter.Get("", "#songs-component", BlackbirdHandler)
+
+	app.Router.SubRouter("users/", usersRouter)
+	app.Router.SubRouter("songs/", songsRouter)
+
+	// app := &hypergo.HyperGo{
+	// 	Router: &hypergo.Router{
+	// 		Wrapper:    WrapPage,
+	// 		Target:     "body",
+	// 		Path:       "",
+	// 		Middleware: []hypergo.Middleware{LoggerOne, LoggerTwo},
+	// 		Routes:     []*hypergo.Route{},
+	// 		SubRouters: []*hypergo.Router{
+	// 			{
+	// 				Wrapper:    WrapUsers,
+	// 				Target:     "#content",
+	// 				Path:       "/users",
+	// 				Middleware: []hypergo.Middleware{UsersMiddleware},
+	// 				Routes: []*hypergo.Route{
+	// 					{
+	// 						Path:             "/username",
+	// 						Method:           "GET",
+	// 						ComponentHandler: UsernameHandler,
+	// 						Target:           "#users-component",
+	// 					},
+	// 					{
+	// 						Path:             "/age",
+	// 						Method:           "GET",
+	// 						Target:           "#users-component",
+	// 						ComponentHandler: AgeHandler,
+	// 					},
+	// 				},
+	// 			},
+	// 			{
+	// 				Wrapper:    WrapSongs,
+	// 				Target:     "#content",
+	// 				Path:       "/songs",
+	// 				Middleware: []hypergo.Middleware{UsersMiddleware},
+	// 				Routes: []*hypergo.Route{
+	// 					{
+	// 						Path:             "/blackbird",
+	// 						Method:           "GET",
+	// 						Target:           "#songs-component",
+	// 						ComponentHandler: BlackbirdHandler,
+	// 					},
+	// 				},
+	// 				SubRouters: []*hypergo.Router{
+	// 					{
+	// 						Wrapper: WrapYesterday,
+	// 						Path:    "/yesterday",
+	// 						Target:  "#songs-component",
+	// 						Routes: []*hypergo.Route{
+	// 							{
+	// 								Path:             "/stats",
+	// 								Method:           "GET",
+	// 								ComponentHandler: YesterdayStatsHandler,
+	// 								Target:           "#yesterday-component",
+	// 							},
+	// 							{
+	// 								Path:             "/artwork",
+	// 								Method:           "GET",
+	// 								ComponentHandler: YesterdayArtworkHandler,
+	// 								Target:           "#yesterday-component",
+	// 							},
+	// 						},
+	// 					},
+	// 				},
+	// 			},
+	// 		},
+	// 	},
+	// }
 
 	mux := http.NewServeMux()
 
-	assignParents(app.Router)
+	// assignParents(app.Router)
 
 	RegisterRouter(mux, app.Router)
 
