@@ -1,10 +1,10 @@
 package hypergo
 
 import (
+	"net/http"
+
 	"github.com/a-h/templ"
 )
-
-type Wrapper func(rw *RW, component templ.Component) templ.Component
 
 type Router struct {
 	Parent     *Router
@@ -20,14 +20,14 @@ func defaultWrap(rw *RW, component templ.Component) templ.Component {
 	return component
 }
 
-func NewRouter() *Router {
+func NewRouter(target string) *Router {
 	return &Router{
 		Parent:     nil,
 		Path:       "/",
 		Routes:     []*Route{},
 		Middleware: []Middleware{},
 		SubRouters: []*Router{},
-		Target:     "",
+		Target:     target,
 		Wrapper:    defaultWrap,
 	}
 }
@@ -39,12 +39,12 @@ func (router *Router) Wrap(w Wrapper) {
 	}
 }
 
-func (router *Router) addRoute(path string, method string, target string, c ComponentHandler) *Route {
+func (router *Router) addRoute(path string, method string, c ComponentHandler) *Route {
 	route := &Route{
 		Parent:           router,
 		Path:             path,
 		Method:           method,
-		Target:           target,
+		Target:           router.Target,
 		Middleware:       router.Middleware,
 		ComponentHandler: c,
 	}
@@ -61,38 +61,40 @@ func (router *Router) SetTarget(target string) {
 	router.Target = target
 }
 
-func (router *Router) Get(path string, target string, c ComponentHandler) *Router {
-	router.addRoute(path, "GET", target, c)
+func (router *Router) Get(path string, c ComponentHandler) *Router {
+	router.addRoute(path, "GET", c)
 	return router
 }
 
-func (router *Router) Post(path string, target string, c ComponentHandler) *Router {
-	router.addRoute(path, "POST", target, c)
+func (router *Router) Post(path string, c ComponentHandler) *Router {
+	router.addRoute(path, "POST", c)
 	return router
 }
 
-func (router *Router) Delete(path string, target string, c ComponentHandler) *Router {
-	router.addRoute(path, "DELETE", target, c)
+func (router *Router) Delete(path string, c ComponentHandler) *Router {
+	router.addRoute(path, "DELETE", c)
 	return router
 }
 
-func (router *Router) Put(path string, target string, c ComponentHandler) *Router {
-	router.addRoute(path, "PUT", target, c)
+func (router *Router) Put(path string, c ComponentHandler) *Router {
+	router.addRoute(path, "PUT", c)
 	return router
 }
 
-func (router *Router) Patch(path string, target string, c ComponentHandler) *Router {
-	router.addRoute(path, "PATCH", target, c)
+func (router *Router) Patch(path string, c ComponentHandler) *Router {
+	router.addRoute(path, "PATCH", c)
 	return router
 }
 
 func (router *Router) SubRouter(path string, subrouter *Router) {
 	subrouter.Parent = router
 	subrouter.Path = path
+	subrouter.Target = router.Target
 	for _, route := range subrouter.Routes {
-		route.Middleware = append(router.Middleware, route.Middleware...)
+		route.Middleware = append(route.Middleware, router.Middleware...)
+		router.Routes = append(router.Routes, route)
 	}
-	router.SubRouters = append(router.SubRouters, subrouter)
+
 }
 
 func (router *Router) FullPath() string {
@@ -105,4 +107,12 @@ func (router *Router) FullPath() string {
 	}
 
 	return path
+}
+
+func (router *Router) register(mux *http.ServeMux) {
+
+	for _, route := range router.Routes {
+		mux.Handle(route.FullPath(), route.ComponentHTTPHandler())
+	}
+
 }
