@@ -49,12 +49,20 @@ func WrapBase(rw *hypergo.RW, component templ.Component) templ.Component {
 	return views.Base(component)
 }
 
-func WrapPage(rw *hypergo.RW, component templ.Component) templ.Component {
+func WrapPage(rw *hypergo.RW, component templ.Component) (templ.Component, error) {
 	username, ok := rw.Context().Value("username").(string)
 	if !ok {
-		fmt.Printf("username not found in ctx\n")
+		return component, fmt.Errorf("username not found")
 	}
-	return views.Base(views.Page(component, username))
+	return views.Base(views.Page(component, username)), nil
+}
+
+func pageCatcher(rw *hypergo.RW, component templ.Component, err error) (templ.Component, error) {
+	if err.Error() == "username not found" {
+		return views.Base(views.Page(component, "not found")), nil
+	}
+
+	return component, err
 }
 
 func main() {
@@ -64,28 +72,27 @@ func main() {
 	app.Use(LogRequest)
 	app.Use(LoggerOne)
 	app.Use(LoggerTwo)
-	app.Use(AddUsername)
-	app.Wrap(WrapPage)
+	app.Wrap(WrapPage).Catch(pageCatcher)
 
 	usersRouter := hypergo.NewRouter("#users-component")
-	usersRouter.Wrap(hypergo.SimpleWrapper(views.Users))
+	usersRouter.Wrap(hypergo.UnsafeWrapFunc(views.Users))
 
-	usersRouter.Get("username", hypergo.SimpleHandler(views.Username))
+	usersRouter.Get("username", hypergo.SimpleComponent(views.Username))
 	usersRouter.Use(LoggerThree)
-	usersRouter.Get("age", hypergo.SimpleHandler(views.Age))
+	usersRouter.Get("age", hypergo.SimpleComponent(views.Age))
 
 	songsRouter := hypergo.NewRouter("#songs-component")
 
-	songsRouter.Wrap(hypergo.SimpleWrapper(views.Songs))
+	songsRouter.Wrap(hypergo.UnsafeWrapFunc(views.Songs))
 
-	songsRouter.Get("blackbird", hypergo.SimpleHandler(views.Blackbird))
+	songsRouter.Get("blackbird", hypergo.SimpleComponent(views.Blackbird))
 
 	YesterdayRouter := hypergo.NewRouter("#yesterday-component")
 
-	YesterdayRouter.Wrap(hypergo.SimpleWrapper(views.Yesterday))
+	YesterdayRouter.Wrap(hypergo.UnsafeWrapFunc(views.Yesterday))
 
-	YesterdayRouter.Get("stats", hypergo.SimpleHandler(views.YesterdayStats))
-	YesterdayRouter.Get("artwork", hypergo.SimpleHandler(views.YesterdayArtwork))
+	YesterdayRouter.Get("stats", hypergo.SimpleComponent(views.YesterdayStats))
+	YesterdayRouter.Get("artwork", hypergo.SimpleComponent(views.YesterdayArtwork))
 
 	songsRouter.SubRouter("yesterday/", YesterdayRouter)
 

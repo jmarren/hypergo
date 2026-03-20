@@ -16,10 +16,6 @@ type Router struct {
 	Target     string
 }
 
-func defaultWrap(rw *RW, component templ.Component) templ.Component {
-	return component
-}
-
 func NewRouter(target string) *Router {
 	return &Router{
 		Parent:     nil,
@@ -28,25 +24,27 @@ func NewRouter(target string) *Router {
 		Middleware: []Middleware{},
 		SubRouters: []*Router{},
 		Target:     target,
-		Wrapper:    defaultWrap,
+		Wrapper:    newWrapper(),
 	}
 }
 
-func (router *Router) Wrap(w Wrapper) {
-	router.Wrapper = func(rw *RW, component templ.Component) templ.Component {
+func (router *Router) Wrap(w WrapFunc) Wrapper {
+	router.Wrapper.Wrap(func(rw *RW, component templ.Component) (templ.Component, error) {
 		rw.Retarget(router.Target)
 		return w(rw, component)
-	}
+	})
+	return router.Wrapper
+
 }
 
-func (router *Router) addRoute(path string, method string, c ComponentHandler) *Route {
+func (router *Router) addRoute(path string, method string, c Component) *Route {
 	route := &Route{
-		Parent:           router,
-		Path:             path,
-		Method:           method,
-		Target:           router.Target,
-		Middleware:       router.Middleware,
-		ComponentHandler: c,
+		Parent:     router,
+		Path:       path,
+		Method:     method,
+		Target:     router.Target,
+		Middleware: router.Middleware,
+		Component:  c,
 	}
 	router.Routes = append(router.Routes, route)
 	return route
@@ -61,27 +59,27 @@ func (router *Router) SetTarget(target string) {
 	router.Target = target
 }
 
-func (router *Router) Get(path string, c ComponentHandler) *Router {
+func (router *Router) Get(path string, c Component) *Router {
 	router.addRoute(path, "GET", c)
 	return router
 }
 
-func (router *Router) Post(path string, c ComponentHandler) *Router {
+func (router *Router) Post(path string, c Component) *Router {
 	router.addRoute(path, "POST", c)
 	return router
 }
 
-func (router *Router) Delete(path string, c ComponentHandler) *Router {
+func (router *Router) Delete(path string, c Component) *Router {
 	router.addRoute(path, "DELETE", c)
 	return router
 }
 
-func (router *Router) Put(path string, c ComponentHandler) *Router {
+func (router *Router) Put(path string, c Component) *Router {
 	router.addRoute(path, "PUT", c)
 	return router
 }
 
-func (router *Router) Patch(path string, c ComponentHandler) *Router {
+func (router *Router) Patch(path string, c Component) *Router {
 	router.addRoute(path, "PATCH", c)
 	return router
 }
@@ -94,7 +92,6 @@ func (router *Router) SubRouter(path string, subrouter *Router) {
 		route.Middleware = append(route.Middleware, router.Middleware...)
 		router.Routes = append(router.Routes, route)
 	}
-
 }
 
 func (router *Router) FullPath() string {
