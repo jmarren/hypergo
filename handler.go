@@ -9,7 +9,6 @@ func SimpleHandler(fn func() templ.Component) ComponentHandler {
 }
 
 func SimpleComponent(fn func() templ.Component) Component {
-	component := newComponent(SimpleHandler(fn))
+	component := NewComponent(SimpleHandler(fn))
 	return component
-
 }

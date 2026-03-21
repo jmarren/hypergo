@@ -6,6 +6,7 @@ import (
 
 	"github.com/a-h/templ"
 	"github.com/jmarren/hypergo"
+	"github.com/jmarren/hypergo/pages"
 	"github.com/jmarren/hypergo/views"
 )
 
@@ -74,30 +75,8 @@ func main() {
 	app.Use(LoggerTwo)
 	app.Wrap(WrapPage).Catch(pageCatcher)
 
-	usersRouter := hypergo.NewRouter("#users-component")
-	usersRouter.Wrap(hypergo.UnsafeWrapFunc(views.Users))
-
-	usersRouter.Get("username", hypergo.SimpleComponent(views.Username))
-	usersRouter.Use(LoggerThree)
-	usersRouter.Get("age", hypergo.SimpleComponent(views.Age))
-
-	songsRouter := hypergo.NewRouter("#songs-component")
-
-	songsRouter.Wrap(hypergo.UnsafeWrapFunc(views.Songs))
-
-	songsRouter.Get("blackbird", hypergo.SimpleComponent(views.Blackbird))
-
-	YesterdayRouter := hypergo.NewRouter("#yesterday-component")
-
-	YesterdayRouter.Wrap(hypergo.UnsafeWrapFunc(views.Yesterday))
-
-	YesterdayRouter.Get("stats", hypergo.SimpleComponent(views.YesterdayStats))
-	YesterdayRouter.Get("artwork", hypergo.SimpleComponent(views.YesterdayArtwork))
-
-	songsRouter.SubRouter("yesterday/", YesterdayRouter)
-
-	app.Router.SubRouter("users/", usersRouter)
-	app.Router.SubRouter("songs/", songsRouter)
+	app.Router.SubRouter("users/", pages.UsersRouter)
+	app.Router.SubRouter("songs/", pages.SongsRouter)
 
 	app.Listen(":5050")
 

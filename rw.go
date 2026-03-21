@@ -67,6 +67,9 @@ func (rw *RW) Retarget(target string) {
 func (rw *RW) Reselect(target string) {
 	rw.ResponseWriter.Header().Set("HX-Reselect", target)
 }
+func (rw *RW) Location(url string) {
+	rw.ResponseWriter.Header().Set("HX-Location", url)
+}
 
 func (rw *RW) ReplaceUrl(url string) {
 	rw.ResponseWriter.Header().Set("HX-Replace-Url", url)

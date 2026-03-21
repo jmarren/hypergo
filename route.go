@@ -21,7 +21,7 @@ type component struct {
 	catchers []ComponentErrCatcher
 }
 
-func newComponent(handler ComponentHandler) *component {
+func NewComponent(handler ComponentHandler) *component {
 	return &component{
 		handler:  handler,
 		catchers: []ComponentErrCatcher{},
@@ -52,28 +52,64 @@ func (c *component) handle(rw *RW) templ.Component {
 
 type Middleware func(h Handler) Handler
 
-type Route struct {
+type Route interface {
+	Handler() http.HandlerFunc
+	Use(m Middleware)
+	PrependMiddleware(m ...Middleware)
+	FullPath() string
+}
+
+type route struct {
 	Parent     *Router
 	Path       string
 	Method     string
 	Middleware []Middleware
-	Component  Component
 	Target     string
 }
 
-func makeRWHandler(h Handler, target string) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		rw := newRW(w, r, target)
-		h(rw)
-	}
+type componentRoute struct {
+	*route
+	Component Component
 }
 
-func (route *Route) Use(m Middleware) {
+type regularRoute struct {
+	*route
+	handler Handler
+	catcher func(rw *RW, err error)
+}
+
+func (route *regularRoute) Handler() http.HandlerFunc {
+
+	handler := route.handler
+	// apply all middleware to the handler
+	for _, m := range route.Middleware {
+		handler = m(handler)
+	}
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		rw := &RW{
+			ResponseWriter: w,
+			Request:        r,
+		}
+		err := handler(rw)
+
+		if err != nil {
+			route.catcher(rw, err)
+		}
+	}
+
+}
+
+func (route *route) Use(m Middleware) {
 	route.Middleware = append([]Middleware{m}, route.Middleware...)
 }
 
+func (route *route) PrependMiddleware(m ...Middleware) {
+	route.Middleware = append(route.Middleware, m...)
+}
+
 // base, users, ...
-func (route *Route) ancestors() []*Router {
+func (route *route) ancestors() []*Router {
 	ancestors := []*Router{}
 
 	curr := route.Parent
@@ -86,7 +122,7 @@ func (route *Route) ancestors() []*Router {
 	return ancestors
 }
 
-func (route *Route) Wrappers(currentPath string) []Wrapper {
+func (route *route) Wrappers(currentPath string) []Wrapper {
 	wrappers := []Wrapper{}
 	found := false
 
@@ -103,7 +139,7 @@ func (route *Route) Wrappers(currentPath string) []Wrapper {
 
 }
 
-func (route *Route) ComponentHTTPHandler() http.HandlerFunc {
+func (route *componentRoute) Handler() http.HandlerFunc {
 	handler := func(rw *RW) error {
 		rw.target = route.Target
 
@@ -128,10 +164,13 @@ func (route *Route) ComponentHTTPHandler() http.HandlerFunc {
 		handler = m(handler)
 	}
 
-	// return a func that creates rw and invokes the handler with it
-	return makeRWHandler(handler, route.Target)
+	return func(w http.ResponseWriter, r *http.Request) {
+		rw := newRW(w, r, route.Target)
+		handler(rw)
+	}
+
 }
 
-func (route *Route) FullPath() string {
+func (route *route) FullPath() string {
 	return route.Method + " " + route.Parent.FullPath() + route.Path
 }
