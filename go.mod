@@ -2,4 +2,22 @@ module github.com/jmarren/hypergo
 
 go 1.25.0
 
-require github.com/a-h/templ v0.3.1001
+require (
+	github.com/a-h/templ v0.3.1001
+	github.com/go-playground/validator/v10 v10.30.1
+)
+
+require (
+	github.com/gabriel-vasile/mimetype v1.4.12 // indirect
+	github.com/go-playground/locales v0.14.1 // indirect
+	github.com/go-playground/universal-translator v0.18.1 // indirect
+	github.com/leodido/go-urn v1.4.0 // indirect
+	golang.org/x/crypto v0.46.0 // indirect
+	golang.org/x/mod v0.34.0 // indirect
+	golang.org/x/sync v0.20.0 // indirect
+	golang.org/x/sys v0.42.0 // indirect
+	golang.org/x/telemetry v0.0.0-20260311193753-579e4da9a98c // indirect
+	golang.org/x/text v0.32.0 // indirect
+	golang.org/x/tools v0.43.0 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
+)

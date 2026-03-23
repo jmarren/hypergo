@@ -1,0 +1,22 @@
+
+package: hypergo
+objects:
+  - name: User
+    fields:
+      - name: FirstName
+        kind: string
+        # min: 18
+        # max: 100
+        # maxLen: 14
+        # minLen: 3
+        # required: true
+      - name: LastName
+        kind: string
+        # maxLen: 14
+        # minLen: 3
+        # required: true
+      - name: Age
+        kind: int
+        # min: 18
+        # max: 100
+        # required: true
