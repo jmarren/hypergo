@@ -1,0 +1,15 @@
+{{ define "base" }}
+package {{ .Package }}
+
+import (
+	"net/http"
+	"strconv"
+	"fmt"
+)
+{{ range .Objects }}
+{{ template "typedef" . }}
+{{ template "constructor" . }}
+{{ end }}
+
+{{ end }}
+

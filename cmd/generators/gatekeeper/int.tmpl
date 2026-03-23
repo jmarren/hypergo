@@ -1,0 +1,6 @@
+{{ define "int" }}
+	x.{{ .Name}}, err = strconv.Atoi(r.FormValue("{{.Name }}"))
+	if err != nil {
+		errs = append(errs, fmt.Errorf("{{ .Name }} must be int"))
+	}
+{{ end }}

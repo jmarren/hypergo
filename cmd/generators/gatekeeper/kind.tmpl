@@ -1,0 +1,1 @@
+{{ define "kind" }}{{ if eq .Kind "int" }}{{ template "int" . }}{{ else if eq .Kind "string" }}{{ template "string" . }}{{end}}{{ end }}

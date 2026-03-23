@@ -1,0 +1,5 @@
+{{ define "typedef" }}
+type {{ .Name }} struct {
+{{ range .Fields }}	{{ .Name }} {{ .Kind }}
+{{ end }}}
+{{ end }}

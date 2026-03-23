@@ -1,0 +1,10 @@
+{{ define "constructor" }}
+func New{{ .Name }}(r *http.Request) (*{{.Name}}, []error) {
+	var err error
+	var errs []error
+	x := new({{ .Name }})
+{{ range .Fields }}{{ template "kind" . }}{{ end }}
+	return x, errs
+
+}
+{{ end }}
