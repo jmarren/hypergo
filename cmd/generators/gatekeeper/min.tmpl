@@ -1,0 +1,5 @@
+{{ define "min" }}
+	if x.{{ .Name }} < {{ .Validators.Min }} {
+		errs = append(errs, fmt.Errorf("{{ .FormName }} must be >= {{ .Validators.Min }}"))
+	} 
+{{ end }}

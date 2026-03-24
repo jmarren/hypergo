@@ -3,11 +3,10 @@ package main
 import (
 	"flag"
 	"fmt"
-	"html/template"
-	"io"
 	"os"
 	"runtime"
 	"strings"
+	"text/template"
 
 	"gopkg.in/yaml.v3"
 )
@@ -19,92 +18,37 @@ func Usage() {
 	flag.PrintDefaults()
 }
 
+type CustomValidator struct {
+	Package  string `yaml:"package"`
+	Function string `yaml:"function"`
+}
+
+type Validators struct {
+	MinLen  string            `yaml:"minLen"`
+	MaxLen  string            `yaml:"maxLen"`
+	Min     string            `yaml:"min"`
+	Max     string            `yaml:"max"`
+	Options []string          `yaml:"options"`
+	Email   bool              `yaml:"email"`
+	Custom  []CustomValidator `yaml:"custom"`
+}
+
 type Field struct {
-	Name string
-	Kind string
-	// Required bool
-}
-
-type IntField struct {
-	Field
-	Min int
-	Max int
-}
-
-type StringField struct {
-	Field
-	MaxLen int
-	MinLen int
+	Name       string
+	Kind       string
+	FormName   string `yaml:"formName"`
+	Validators `yaml:"validators,inline"`
 }
 
 type Object struct {
 	Name   string
-	Fields []Field
+	Fields []Field `yaml:"fields"`
 }
 
 type Config struct {
 	Package string
-	Objects []Object
+	Objects []Object `yaml:"objects"`
 }
-
-func (f *Field) MakeValidator() {
-	tmpl, err := template.New("validator").Parse(`
-{{  if eq .Kind  "int" }}_, err := strconv.Atoi({{ .Name }}) { 
-	if err != nil {
-		errs = 	append(errs, "not of type int") 
-	}
-}{{ end }}
-`)
-
-	if err != nil {
-		panic(err)
-	}
-
-	err = tmpl.Execute(os.Stdout, f)
-
-	if err != nil {
-		panic(err)
-	}
-}
-
-func (f *Field) intValidation() {
-
-	tmpl, err := template.New("intValidation").Parse(`
-			x.{{ .Name }}, err = strconv.Atoi(r.FormValue("{{ .Name }}"))
-        if err != nil {
-		errs = append(errs, fmt.Errorf("{{ .Name }} must be a number"))
-        }
-
-	`)
-	if err != nil {
-		panic(err)
-	}
-
-	err = tmpl.Execute(os.Stdout, f)
-	if err != nil {
-		panic(err)
-	}
-
-}
-
-func (f *Field) Validation() {
-
-	switch f.Kind {
-	case "int":
-		f.intValidation()
-	}
-}
-
-// TemplateRegistry is a custom HTML template renderer for Echo framework
-type TemplateRegistry struct {
-	templates *template.Template
-}
-
-func (t *TemplateRegistry) Render(w io.Writer, name string, data interface{}) error {
-	return t.templates.ExecuteTemplate(w, name, data)
-}
-
-var TmplRegistry *TemplateRegistry
 
 // Get current file's absolute path
 func getBasePath() (string, error) {
@@ -119,14 +63,12 @@ func getBasePath() (string, error) {
 	return basePath, nil
 }
 
-func main() {
+func buildTemplates() *template.Template {
 
-	if len(os.Args) < 2 {
-		Usage()
-		os.Exit(1)
-	}
-
-	templates := template.New("base").Funcs(template.FuncMap{})
+	templates := template.New("base").Funcs(template.FuncMap{
+		"joinStrs": joinStrings,
+		"join":     strings.Join,
+	})
 
 	basePath, err := getBasePath()
 
@@ -134,26 +76,37 @@ func main() {
 		panic(err)
 	}
 
-	// Parse base layout
-	templates = template.Must(templates.ParseFiles(basePath + "base.tmpl"))
-	templates = template.Must(templates.ParseFiles(basePath + "typedef.tmpl"))
-	templates = template.Must(templates.ParseFiles(basePath + "constructor.tmpl"))
-	templates = template.Must(templates.ParseFiles(basePath + "kind.tmpl"))
-	templates = template.Must(templates.ParseFiles(basePath + "int.tmpl"))
-	templates = template.Must(templates.ParseFiles(basePath + "string.tmpl"))
+	entries, err := os.ReadDir(basePath)
 
-	// // Parse all partial templates (blocks)
-	// for _, partial := range partials {
-	// 	fmt.Println(partial)
-	// 	templates = template.Must(templates.ParseFiles(dir + "/" + partial))
-	// }
+	// add all files with .tmpl extension to templates
+	for _, entry := range entries {
+		name := entry.Name()
+		if strings.HasSuffix(name, ".tmpl") {
+			templates = template.Must(templates.ParseFiles(basePath + name))
+		}
+	}
 
-	// Set up the global template registry
-	TmplRegistry = &TemplateRegistry{templates: templates}
+	return templates
+
+}
+
+func joinStrings(strs []string) string {
+
+	quotedStrs := []string{}
+	for _, str := range strs {
+		quotedStrs = append(quotedStrs, "\""+str+"\"")
+	}
+
+	return strings.Join(quotedStrs, ", ")
+}
+
+func readYaml() Config {
+	if len(os.Args) < 2 {
+		Usage()
+		os.Exit(1)
+	}
 
 	path := os.Args[1]
-
-	fmt.Printf("path = %s\n", path)
 
 	yamlBytes, err := os.ReadFile(path)
 
@@ -163,61 +116,24 @@ func main() {
 
 	t := Config{}
 
-	yaml.Unmarshal(yamlBytes, &t)
-
-	// 	tmpl, err := template.New("structBuilder").Parse(
-	// 		`{{ define "header" }}
-	// package {{ .Package }}
-	//
-	// import (
-	// 	"net/http"
-	// 	"strconv"
-	// 	"fmt"
-	// )
-	// {{ end }}
-	// {{ template "header" . }}
-	//
-	// {{ range .Objects }}
-	// type {{ .Name }} struct {
-	// {{ range .Fields }}	{{ .Name }} {{ .Kind }}
-	// {{ end }}}
-	//
-	// func New{{ .Name }}(r *http.Request) (*{{ .Name }}, []error) {
-	// 	errs := []error{}
-	// 	var err error
-	// 	x := new({{.Name }})
-	// {{ range .Fields }}
-	// {{ if eq .Kind "string" }}	x.{{ .Name }} = r.FormValue("{{ .Name }}"){{ end }}{{ if eq .Kind "int" }}	x.{{ .Name }}, err = strconv.Atoi(r.FormValue("{{ .Name }}"))
-	//         if err != nil {
-	// 		errs = append(errs, fmt.Errorf("{{ .Name }} must be a number"))
-	//         }
-	//       {{ end }}
-	//       {{ end }}
-	//
-	//       return x, errs
-	//
-	// }
-	//
-	// {{ end }}
-	//
-	//
-	//
-	// `)
-
-	// func (s *{{ .Name }}) FromRequest(r *http.Request) {
-	//   s.{{ .Name }} = r.FormValue("{{ .Name }}")
-	//
-	// {{ end }}
+	err = yaml.Unmarshal(yamlBytes, &t)
 
 	if err != nil {
 		panic(err)
 	}
+	return t
 
-	fmt.Printf("t.Objects[0] = %v\n", t.Objects[0].Fields[0])
+}
 
-	for _, field := range t.Objects[0].Fields {
-		field.Validation()
-	}
+func main() {
+
+	t := readYaml()
+
+	fmt.Printf("t = %v\n", t)
+
+	fmt.Printf("t.Objects[0].Fields = %v\n", t.Objects[0].Fields)
+
+	templates := buildTemplates()
 
 	file, err := os.OpenFile("gatekeeper.go", os.O_WRONLY|os.O_CREATE, 0777)
 
@@ -225,11 +141,6 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	//
 	defer file.Close()
-
-	// os.WriteFile()
-
-	// fmt.Fprint()
 
 }

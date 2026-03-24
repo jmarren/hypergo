@@ -1,0 +1,5 @@
+{{ define "max" }}
+	if x.{{ .Name }} > {{ .Validators.Max }} {
+		errs = append(errs, fmt.Errorf("{{ .FormName }} must be <= {{ .Validators.Max }}"))
+	}
+{{ end }}

@@ -5,21 +5,60 @@ objects:
     fields:
       - name: FirstName
         kind: string
-        validators:
-          - minLen: 3
-          - maxLen: 10
-        # min: 18
-        # max: 100
-        # maxLen: 14
-        # minLen: 3
-        # required: true
+        formName: "first name"
+        minLen: 3
+        maxLen: 10
+
       - name: LastName
         kind: string
-        # maxLen: 14
-        # minLen: 3
-        # required: true
+        formName: "last name"
+        minLen: 3
+        maxLen: 10
+        custom:
+            - function: NoWhiteSpace
+
       - name: Age
+        formName: age
         kind: int
-        # min: 18
-        # max: 100
-        # required: true
+        min: 18
+        max: 100
+            
+      - name: Email
+        kind: string
+        email: true
+        
+
+      - name: BirthMonth
+        kind: string
+        formName: birth month
+        options: 
+          - January
+          - February
+          - March
+          - April
+          - May
+          - June
+          - July
+          - August
+          - September
+          - October
+          - November
+          - December
+
+  - name: Search
+    fields:
+      - name: QueryString
+        formName: search
+        kind: string
+        minLen: 1
+        maxLen: 24
+      - name: ResultCount
+        formName: result count
+        kind: int
+        options:
+          - 10
+          - 20
+          - 50
+          - 100
+
+

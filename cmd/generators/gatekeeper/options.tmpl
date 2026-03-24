@@ -1,0 +1,19 @@
+
+{{ define "contains" }}
+	if !slices.Contains({{ .Name }}Options, x.{{ .Name }}) {
+		errs = append(errs, fmt.Errorf("invalid option selected for {{ .FormName }}"))
+	}
+{{ end }}
+
+
+{{ define "int_options" }}
+	{{ .Name }}Options := []int{ {{ join .Validators.Options ", " }} }
+	{{ template "contains" . }}
+{{ end }}
+
+
+{{ define "string_options" }}
+	{{ .Name }}Options := []string{ {{ joinStrs .Validators.Options }}}
+	{{ template "contains" . }}
+{{ end }}
+

@@ -1,10 +1,13 @@
 {{ define "base" }}
-package {{ .Package }}
+{{ $basePackage := .Package }}
+package {{ $basePackage }}
 
 import (
 	"net/http"
 	"strconv"
 	"fmt"
+	"slices"
+	"net/mail"
 )
 {{ range .Objects }}
 {{ template "typedef" . }}

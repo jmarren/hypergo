@@ -1,0 +1,11 @@
+
+{{ define "custom" }}
+{{  $name :=  .Name  }}
+{{ range .Validators.Custom }}
+	err = {{ if .Package }}{{ .Package }}.{{ end }}{{ .Function }}(x.{{ $name }}) 
+	if err != nil {
+		errs = append(errs, err)
+	}
+
+{{ end }}
+{{ end }}
