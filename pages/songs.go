@@ -26,38 +26,21 @@ func SetFavorite(rw *hypergo.RW) (templ.Component, error) {
 type User struct {
 	FirstName string `validate:"required"`
 	LastName  string `validate:"required"`
-	// Age            uint8  `validate:"gte=0,lte=130"`
-	// Email          string `validate:"required,email"`
-	// Gender         string `validate:"oneof=male female prefer_not_to"`
-	// FavouriteColor string `validate:"iscolor"` // alias for 'hexcolor|rgb|rgba|hsl|hsla'
 }
 
 // use a single instance of Validate, it caches struct info
 // var validate *validator.Validate
-
-// type ComponentHandler func(rw *RW) (templ.Component, error)
-
-func FavSongForm(rw *hypergo.RW) (templ.Component, error) {
+func FavSongForm(rw *hypergo.RW) templ.Component {
 	queryParams := rw.URL.Query().Get("errors")
 
 	errors := strings.Split(queryParams, ",")
 
-	return views.FavoriteSongForm(errors), nil
+	return views.FavoriteSongForm(errors)
 }
 
-func postFavoriteSong(rw *hypergo.RW) error {
+func postFavoriteSong(rw *hypergo.RW) {
 	favSong := rw.FormValue("fav-song")
 	fmt.Printf("fav-song = %s\n", favSong)
-
-	validator := hypergo.NewRequestValidator().Use("fav-song", hypergo.RequireMinLen(2), hypergo.RequireMaxLen(1), hypergo.RequireInt)
-
-	vals, errs := validator.Validate(rw.Request)
-
-	if len(errs) != 0 {
-		fmt.Printf("errs = %v\n", errs)
-	}
-
-	fmt.Printf("fav-song = %d\n", vals["fav-song"].Int())
 
 	queryParams := []string{}
 
@@ -67,15 +50,11 @@ func postFavoriteSong(rw *hypergo.RW) error {
 
 	if len(queryParams) > 0 {
 		rw.Location("/songs/favorite?errors=" + strings.Join(queryParams, ","))
-		return nil
 	}
 
 	rw.Location("/songs/blackbird")
-	return nil
 }
 func init() {
-
-	// validate = validator.New(validator.WithRequiredStructEnabled())
 
 	favoriteSong = ""
 	// create the router
@@ -86,9 +65,9 @@ func init() {
 
 	SongsRouter.GetComponent("blackbird", hypergo.SimpleComponent(views.Blackbird))
 
-	SongsRouter.GetComponent("favorite", hypergo.NewComponent(FavSongForm).Handler())
+	SongsRouter.GetComponent("favorite", FavSongForm)
 
-	SongsRouter.Post("favorite", hypergo.NewHandler(postFavoriteSong).HandleFunc())
+	SongsRouter.Post("favorite", postFavoriteSong)
 
 	YesterdayRouter := hypergo.NewRouter("#yesterday-component")
 	YesterdayRouter.Wrap(hypergo.SimpleWrapper(views.Yesterday))

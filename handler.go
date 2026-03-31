@@ -2,12 +2,7 @@ package hypergo
 
 import "github.com/a-h/templ"
 
-// type Handler func(rw *RW) error
-
 type HandlerFunc func(rw *RW)
-
-//go:generate ./build/gatekeeper -type=Pill
-type HandleFunc func(rw *RW) error
 type Catcher func(rw *RW, err error) error
 
 type Handler interface {
@@ -17,9 +12,8 @@ type Handler interface {
 }
 
 type handler struct {
-	handlerFunc HandleFunc
+	handlerFunc func(rw *RW) error
 	catchers    []Catcher
-	validator   RequestValidator
 }
 
 func (h *handler) HandleFunc() HandlerFunc {
@@ -49,11 +43,10 @@ func (h *handler) Catch(catchers ...Catcher) Handler {
 	return h
 }
 
-func NewHandler(h HandleFunc) Handler {
+func NewHandler(h func(rw *RW) error) Handler {
 	return &handler{
 		handlerFunc: h,
 		catchers:    []Catcher{},
-		validator:   NewRequestValidator(),
 	}
 }
 

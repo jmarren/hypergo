@@ -5,7 +5,6 @@ import "net/http"
 type regularRoute struct {
 	*route
 	handler HandlerFunc
-	// catcher func(rw *RW, err error)
 }
 
 func (route *regularRoute) Handler() http.HandlerFunc {
@@ -22,7 +21,5 @@ func (route *regularRoute) Handler() http.HandlerFunc {
 			Request:        r,
 		}
 		handler(rw)
-
 	}
-
 }

@@ -37,13 +37,11 @@ func NewRouter(target string) *Router {
 }
 
 func (router *Router) Wrap(w ComponentWrapper) *Router {
-	router.Wrapper = w
-	// router.Wrapper.Wrap(func(rw *RW, component templ.Component) (templ.Component, error) {
-	// 	rw.Retarget(router.Target)
-	// 	return w(rw, component)
-	// })
+	router.Wrapper = func(rw *RW, c templ.Component) templ.Component {
+		rw.Retarget(router.Target)
+		return w(rw, c)
+	}
 	return router
-
 }
 
 func (router *Router) addComponentRoute(path string, method string, c ComponentFunc) Route {

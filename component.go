@@ -33,15 +33,6 @@ func (c *component) Catch(catcher ComponentErrCatcher) Component {
 	return c
 }
 
-// func (c *component) Handler() http.HandlerFunc {
-// 	return func(w http.ResponseWriter, r *http.Request) {
-// 		c.handle(&RW{
-// 			Request:        r,
-// 			ResponseWriter: w,
-// 		})
-// 	}
-// }
-
 func (c *component) handle(rw *RW) templ.Component {
 	component, err := c.handler(rw)
 
