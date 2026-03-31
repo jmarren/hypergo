@@ -4,27 +4,27 @@ import "net/http"
 
 type componentRoute struct {
 	*route
-	Component Component
+	Component ComponentFunc
 }
 
 func (route *componentRoute) Handler() http.HandlerFunc {
-	handler := func(rw *RW) error {
+	handler := func(rw *RW) {
 		rw.target = route.Target
 
 		// invoke the componentHandler
-		component := route.Component.handle(rw)
+		component := route.Component(rw)
 
 		wrappers := route.Wrappers(rw.CurrentUrl().Path)
 
 		for _, wrapper := range wrappers {
-			component = wrapper.wrap(rw, component)
+			component = wrapper(rw, component)
 		}
 
 		if rw.target != "" {
 			rw.ResponseWriter.Header().Set("HX-Retarget", rw.target)
 		}
 		// render & return err
-		return component.Render(rw.Request.Context(), rw.ResponseWriter)
+		component.Render(rw.Request.Context(), rw.ResponseWriter)
 	}
 
 	// apply all middleware to the handler

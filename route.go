@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-type Middleware func(h Handler) Handler
+type Middleware func(h HandlerFunc) HandlerFunc
 
 type Route interface {
 	Handler() http.HandlerFunc
@@ -44,8 +44,8 @@ func (route *route) ancestors() []*Router {
 	return ancestors
 }
 
-func (route *route) Wrappers(currentPath string) []Wrapper {
-	wrappers := []Wrapper{}
+func (route *route) Wrappers(currentPath string) []ComponentWrapper {
+	wrappers := []ComponentWrapper{}
 	found := false
 
 	ancestors := route.ancestors()
@@ -53,7 +53,7 @@ func (route *route) Wrappers(currentPath string) []Wrapper {
 	for _, router := range ancestors {
 		currentPath, found = strings.CutPrefix(currentPath, router.Path)
 		if !found || currentPath == "" {
-			wrappers = append([]Wrapper{router.Wrapper}, wrappers...)
+			wrappers = append([]ComponentWrapper{router.Wrapper}, wrappers...)
 		}
 	}
 

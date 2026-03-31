@@ -6,7 +6,6 @@ import (
 	"os"
 	"runtime"
 	"strings"
-	"text/template"
 
 	"gopkg.in/yaml.v3"
 )
@@ -61,33 +60,6 @@ func getBasePath() (string, error) {
 	// runtime.Caller returns the path as known at compile time, use filepath.Abs for absolute path if needed
 	// The path returned by runtime.Caller is already an absolute path in most cases.
 	return basePath, nil
-}
-
-func buildTemplates() *template.Template {
-
-	templates := template.New("base").Funcs(template.FuncMap{
-		"joinStrs": joinStrings,
-		"join":     strings.Join,
-	})
-
-	basePath, err := getBasePath()
-
-	if err != nil {
-		panic(err)
-	}
-
-	entries, err := os.ReadDir(basePath)
-
-	// add all files with .tmpl extension to templates
-	for _, entry := range entries {
-		name := entry.Name()
-		if strings.HasSuffix(name, ".tmpl") {
-			templates = template.Must(templates.ParseFiles(basePath + name))
-		}
-	}
-
-	return templates
-
 }
 
 func joinStrings(strs []string) string {

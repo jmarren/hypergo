@@ -4,6 +4,8 @@ import "github.com/a-h/templ"
 
 // type Handler func(rw *RW) error
 
+type HandlerFunc func(rw *RW)
+
 //go:generate ./build/gatekeeper -type=Pill
 type HandleFunc func(rw *RW) error
 type Catcher func(rw *RW, err error) error
@@ -11,12 +13,17 @@ type Catcher func(rw *RW, err error) error
 type Handler interface {
 	handle(rw *RW)
 	Catch(catcher ...Catcher) Handler
+	HandleFunc() HandlerFunc
 }
 
 type handler struct {
 	handlerFunc HandleFunc
 	catchers    []Catcher
 	validator   RequestValidator
+}
+
+func (h *handler) HandleFunc() HandlerFunc {
+	return h.handle
 }
 
 func (h *handler) handle(rw *RW) {
@@ -56,7 +63,6 @@ func SimpleHandler(fn func() templ.Component) ComponentHandler {
 	}
 }
 
-func SimpleComponent(fn func() templ.Component) Component {
-	component := NewComponent(SimpleHandler(fn))
-	return component
+func SimpleComponent(fn func() templ.Component) ComponentFunc {
+	return NewComponent(SimpleHandler(fn)).Handler()
 }

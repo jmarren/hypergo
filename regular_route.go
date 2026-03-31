@@ -4,8 +4,8 @@ import "net/http"
 
 type regularRoute struct {
 	*route
-	handler Handler
-	catcher func(rw *RW, err error)
+	handler HandlerFunc
+	// catcher func(rw *RW, err error)
 }
 
 func (route *regularRoute) Handler() http.HandlerFunc {
@@ -21,11 +21,8 @@ func (route *regularRoute) Handler() http.HandlerFunc {
 			ResponseWriter: w,
 			Request:        r,
 		}
-		err := handler(rw)
+		handler(rw)
 
-		if err != nil {
-			route.catcher(rw, err)
-		}
 	}
 
 }

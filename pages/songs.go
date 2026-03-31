@@ -59,48 +59,6 @@ func postFavoriteSong(rw *hypergo.RW) error {
 
 	fmt.Printf("fav-song = %d\n", vals["fav-song"].Int())
 
-	// usernameValidator := hypergo.UsernameValidator(
-	// 	rw.FormValue("fav-song"),
-	// 	hypergo.RequireMaxLen(2),
-	// 	hypergo.RequireMaxLen(5),
-	// 	hypergo.NoWhiteSpace)
-
-	// user := &User{
-	// 	FirstName: "Badger",
-	// 	// LastName:  "Smith",
-	// }
-	//
-	// err := validate.Struct(user)
-	//
-	// if err != nil {
-	//
-	// 	// this check is only needed when your code could produce
-	// 	// an invalid value for validation such as interface with nil
-	// 	// value most including myself do not usually have code like this.
-	// 	var invalidValidationError *validator.InvalidValidationError
-	// 	if errors.As(err, &invalidValidationError) {
-	// 		fmt.Println(err)
-	// 		return err
-	// 	}
-	//
-	// 	var validateErrs validator.ValidationErrors
-	// 	if errors.As(err, &validateErrs) {
-	// 		for _, e := range validateErrs {
-	// 			fmt.Printf("e.Namespace() = %s\n", e.Namespace())
-	// 			fmt.Printf("e.Field() = %s\n", e.Field())
-	// 			fmt.Printf("e.StructNamespace() = %s\n", e.StructNamespace())
-	// 			fmt.Printf("e.StructField() =  %s\n", e.StructField())
-	// 			fmt.Println(e.Tag())
-	// 			fmt.Println(e.ActualTag())
-	// 			fmt.Println(e.Kind())
-	// 			fmt.Println(e.Type())
-	// 			fmt.Println(e.Value())
-	// 			fmt.Println(e.Param())
-	// 			fmt.Println()
-	// 		}
-	// 	}
-	// }
-	//
 	queryParams := []string{}
 
 	if len(favSong) < 3 {
@@ -124,16 +82,16 @@ func init() {
 	SongsRouter = hypergo.NewRouter("#songs-component")
 
 	// wrap
-	SongsRouter.Wrap(hypergo.UnsafeWrapFunc(views.Songs))
+	SongsRouter.Wrap(hypergo.SimpleWrapper(views.Songs))
 
 	SongsRouter.GetComponent("blackbird", hypergo.SimpleComponent(views.Blackbird))
 
-	SongsRouter.GetComponent("favorite", hypergo.NewComponent(FavSongForm))
+	SongsRouter.GetComponent("favorite", hypergo.NewComponent(FavSongForm).Handler())
 
-	SongsRouter.Post("favorite", hypergo.NewHandler(postFavoriteSong))
+	SongsRouter.Post("favorite", hypergo.NewHandler(postFavoriteSong).HandleFunc())
 
 	YesterdayRouter := hypergo.NewRouter("#yesterday-component")
-	YesterdayRouter.Wrap(hypergo.UnsafeWrapFunc(views.Yesterday))
+	YesterdayRouter.Wrap(hypergo.SimpleWrapper(views.Yesterday))
 	YesterdayRouter.GetComponent("stats", hypergo.SimpleComponent(views.YesterdayStats))
 	YesterdayRouter.GetComponent("artwork", hypergo.SimpleComponent(views.YesterdayArtwork))
 

@@ -1,7 +1,7 @@
 
-package: hypergo
 objects:
   - name: User
+    package: hypergo
     fields:
       - name: FirstName
         kind: string
@@ -46,6 +46,7 @@ objects:
           - December
 
   - name: Search
+    package: hypergo
     fields:
       - name: QueryString
         formName: search

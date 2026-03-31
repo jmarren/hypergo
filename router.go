@@ -6,14 +6,22 @@ import (
 	"github.com/a-h/templ"
 )
 
+type ComponentFunc func(rw *RW) templ.Component
+
+type ComponentWrapper func(rw *RW, c templ.Component) templ.Component
+
 type Router struct {
 	Parent     *Router
 	Path       string
 	Routes     []Route
 	Middleware []Middleware
 	SubRouters []*Router
-	Wrapper    Wrapper
+	Wrapper    ComponentWrapper
 	Target     string
+}
+
+func EmptyWrap(rw *RW, c templ.Component) templ.Component {
+	return c
 }
 
 func NewRouter(target string) *Router {
@@ -24,20 +32,21 @@ func NewRouter(target string) *Router {
 		Middleware: []Middleware{},
 		SubRouters: []*Router{},
 		Target:     target,
-		Wrapper:    newWrapper(),
+		Wrapper:    EmptyWrap,
 	}
 }
 
-func (router *Router) Wrap(w WrapFunc) Wrapper {
-	router.Wrapper.Wrap(func(rw *RW, component templ.Component) (templ.Component, error) {
-		rw.Retarget(router.Target)
-		return w(rw, component)
-	})
-	return router.Wrapper
+func (router *Router) Wrap(w ComponentWrapper) *Router {
+	router.Wrapper = w
+	// router.Wrapper.Wrap(func(rw *RW, component templ.Component) (templ.Component, error) {
+	// 	rw.Retarget(router.Target)
+	// 	return w(rw, component)
+	// })
+	return router
 
 }
 
-func (router *Router) addComponentRoute(path string, method string, c Component) Route {
+func (router *Router) addComponentRoute(path string, method string, c ComponentFunc) Route {
 	route := &componentRoute{
 		route: &route{
 			Parent:     router,
@@ -53,7 +62,7 @@ func (router *Router) addComponentRoute(path string, method string, c Component)
 
 }
 
-func (router *Router) addRegularRoute(path string, method string, h Handler) Route {
+func (router *Router) addRegularRoute(path string, method string, h HandlerFunc) Route {
 	route := &regularRoute{
 		route: &route{
 			Parent:     router,
@@ -77,34 +86,34 @@ func (router *Router) SetTarget(target string) {
 	router.Target = target
 }
 
-func (router *Router) GetComponent(path string, c Component) Component {
+func (router *Router) GetComponent(path string, c ComponentFunc) ComponentFunc {
 	router.addComponentRoute(path, "GET", c)
 	return c
 }
 
-func (router *Router) Get(path string, h Handler) Handler {
+func (router *Router) Get(path string, h HandlerFunc) *Router {
 	router.addRegularRoute(path, "GET", h)
-	return h
+	return router
 }
 
-func (router *Router) Post(path string, h Handler) Handler {
+func (router *Router) Post(path string, h HandlerFunc) *Router {
 	router.addRegularRoute(path, "POST", h)
-	return h
+	return router
 }
 
-func (router *Router) Delete(path string, c Component) Component {
-	router.addComponentRoute(path, "DELETE", c)
-	return c
+func (router *Router) Delete(path string, h HandlerFunc) *Router {
+	router.addRegularRoute(path, "DELETE", h)
+	return router
 }
 
-func (router *Router) Put(path string, c Component) Component {
-	router.addComponentRoute(path, "PUT", c)
-	return c
+func (router *Router) Put(path string, h HandlerFunc) *Router {
+	router.addRegularRoute(path, "PUT", h)
+	return router
 }
 
-func (router *Router) Patch(path string, c Component) Component {
-	router.addComponentRoute(path, "PATCH", c)
-	return c
+func (router *Router) Patch(path string, h HandlerFunc) *Router {
+	router.addRegularRoute(path, "PATCH", h)
+	return router
 }
 
 func (router *Router) SubRouter(path string, subrouter *Router) {

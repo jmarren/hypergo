@@ -10,39 +10,40 @@ import (
 	"github.com/jmarren/hypergo/views"
 )
 
-func LoggerOne(h hypergo.HandleFunc) hypergo.HandleFunc {
-	return func(rw *hypergo.RW) error {
+// type Middleware func(h HandlerFunc) HandlerFunc
+func LoggerOne(h hypergo.HandlerFunc) hypergo.HandlerFunc {
+	return func(rw *hypergo.RW) {
 		fmt.Printf("loggerOne\n")
-		return h(rw)
+		h(rw)
 	}
 }
 
-func LoggerTwo(h hypergo.Handler) hypergo.Handler {
-	return func(rw *hypergo.RW) error {
+func LoggerTwo(h hypergo.HandlerFunc) hypergo.HandlerFunc {
+	return func(rw *hypergo.RW) {
 		fmt.Printf("loggerTwo\n")
-		return h(rw)
+		h(rw)
 	}
 }
 
-func LoggerThree(h hypergo.Handler) hypergo.Handler {
-	return func(rw *hypergo.RW) error {
+func LoggerThree(h hypergo.HandlerFunc) hypergo.HandlerFunc {
+	return func(rw *hypergo.RW) {
 		fmt.Printf("loggerThree\n")
-		return h(rw)
+		h(rw)
 	}
 }
 
-func AddUsername(h hypergo.Handler) hypergo.Handler {
-	return func(rw *hypergo.RW) error {
+func AddUsername(h hypergo.HandlerFunc) hypergo.HandlerFunc {
+	return func(rw *hypergo.RW) {
 		fmt.Println("adding username")
 		rw.Request = rw.Request.WithContext(context.WithValue(rw.Context(), "username", "john"))
-		return h(rw)
+		h(rw)
 	}
 }
 
-func LogRequest(h hypergo.Handler) hypergo.Handler {
-	return func(rw *hypergo.RW) error {
+func LogRequest(h hypergo.HandlerFunc) hypergo.HandlerFunc {
+	return func(rw *hypergo.RW) {
 		fmt.Printf("%s %s\n", rw.Request.Method, rw.URL.Path)
-		return h(rw)
+		h(rw)
 	}
 }
 
@@ -50,12 +51,12 @@ func WrapBase(rw *hypergo.RW, component templ.Component) templ.Component {
 	return views.Base(component)
 }
 
-func WrapPage(rw *hypergo.RW, component templ.Component) (templ.Component, error) {
+func WrapPage(rw *hypergo.RW, component templ.Component) templ.Component {
 	username, ok := rw.Context().Value("username").(string)
 	if !ok {
-		return component, fmt.Errorf("username not found")
+		return views.Base(views.Page(component, "user not found"))
 	}
-	return views.Base(views.Page(component, username)), nil
+	return views.Base(views.Page(component, username))
 }
 
 func pageCatcher(rw *hypergo.RW, component templ.Component, err error) (templ.Component, error) {
@@ -68,14 +69,12 @@ func pageCatcher(rw *hypergo.RW, component templ.Component, err error) (templ.Co
 
 func main() {
 
-	// hypergo.TryValidate()
-
 	app := hypergo.New("#content")
 
 	app.Use(LogRequest)
 	app.Use(LoggerOne)
 	app.Use(LoggerTwo)
-	app.Wrap(WrapPage).Catch(pageCatcher)
+	app.Wrap(WrapPage)
 
 	app.Router.SubRouter("users/", pages.UsersRouter)
 	app.Router.SubRouter("songs/", pages.SongsRouter)

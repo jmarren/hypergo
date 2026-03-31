@@ -73,12 +73,18 @@ func UnsafeWrapFunc(fn func(component templ.Component) templ.Component) WrapFunc
 	}
 }
 
-func UnsafeWrapper(fn func(component templ.Component) templ.Component) Wrapper {
-	return SimpleWrapper(UnsafeWrapFunc(fn))
+func SimpleWrapper(fn func(c templ.Component) templ.Component) ComponentWrapper {
+	return func(rw *RW, comp templ.Component) templ.Component {
+		return fn(comp)
+	}
 }
 
-func SimpleWrapper(fn WrapFunc) Wrapper {
-	w := newWrapper()
-	w.Wrap(fn)
-	return w
-}
+// func UnsafeWrapper(fn func(component templ.Component) templ.Component) Wrapper {
+// 	return SimpleWrapper(UnsafeWrapFunc(fn))
+// }
+//
+// func SimpleWrapper(fn WrapFunc) Wrapper {
+// 	w := newWrapper()
+// 	w.Wrap(fn)
+// 	return w
+// }

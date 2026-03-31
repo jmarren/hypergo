@@ -24,10 +24,23 @@ func NewComponent(handler ComponentHandler) *component {
 	}
 }
 
+func (c *component) Handler() ComponentFunc {
+	return c.handle
+}
+
 func (c *component) Catch(catcher ComponentErrCatcher) Component {
 	c.catchers = append(c.catchers, catcher)
 	return c
 }
+
+// func (c *component) Handler() http.HandlerFunc {
+// 	return func(w http.ResponseWriter, r *http.Request) {
+// 		c.handle(&RW{
+// 			Request:        r,
+// 			ResponseWriter: w,
+// 		})
+// 	}
+// }
 
 func (c *component) handle(rw *RW) templ.Component {
 	component, err := c.handler(rw)
