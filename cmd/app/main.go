@@ -74,7 +74,10 @@ func main() {
 	app.Use(LogRequest)
 	app.Use(LoggerOne)
 	app.Use(LoggerTwo)
-	app.Wrap(WrapPage)
+	app.HxWrap(WrapPage)
+
+	app.GetComponent("", hypergo.SimpleComponent(views.Age))
+	app.GetComponent("about", hypergo.SimpleComponent(views.Blackbird))
 
 	app.Router.SubRouter("users/", pages.UsersRouter)
 	app.Router.SubRouter("songs/", pages.SongsRouter)

@@ -36,6 +36,17 @@ func NewRouter(target string) *Router {
 	}
 }
 
+func (router *Router) HxWrap(w ComponentWrapper) *Router {
+	router.Wrapper = func(rw *RW, c templ.Component) templ.Component {
+		if rw.IsHxRequest() {
+			return c
+		}
+		rw.Retarget(router.Target)
+		return w(rw, c)
+	}
+	return router
+}
+
 func (router *Router) Wrap(w ComponentWrapper) *Router {
 	router.Wrapper = func(rw *RW, c templ.Component) templ.Component {
 		rw.Retarget(router.Target)

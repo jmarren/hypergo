@@ -31,7 +31,7 @@ func Base(content templ.Component) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<!doctype html><html><head><link hx-preserve=\"true\" rel=\"stylesheet\" href=\"/public/styles.css\"><script hx-preserve=\"true\" src=\"https://cdn.jsdelivr.net/npm/htmx.org@2.0.8/dist/htmx.min.js\" integrity=\"sha384-/TgkGk7p307TH7EXJDuUlgG3Ce1UVolAOFopFekQkkXihi5u/6OCvVKyz1W+idaz\" crossorigin=\"anonymous\"></script><script hx-preserve src=\"https://cdn.jsdelivr.net/npm/htmx-ext-head-support@2.0.5\" integrity=\"sha384-cvMqHzjCJsOHgGuyB3sWXaUSv/Krm0BdzjuI1rtkjCbL1l1oHJx+cHyVRJhyuEz0\" crossorigin=\"anonymous\"></script><style hx-preserve=\"true\">\n\t\t\t\t#container {\n\t\t\t\t\tborder: 2px solid black;\n\t\t\t\t}\n\t\t\t</style></head><body hx-boost=\"true\" hx-ext=\"head-support\"><div id=\"page\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<!doctype html><html><head><link hx-preserve=\"true\" rel=\"stylesheet\" href=\"/public/styles.css\"><script hx-preserve=\"true\" src=\"https://cdn.jsdelivr.net/npm/htmx.org@2.0.8/dist/htmx.min.js\" integrity=\"sha384-/TgkGk7p307TH7EXJDuUlgG3Ce1UVolAOFopFekQkkXihi5u/6OCvVKyz1W+idaz\" crossorigin=\"anonymous\"></script><script hx-preserve src=\"https://cdn.jsdelivr.net/npm/htmx-ext-head-support@2.0.5\" integrity=\"sha384-cvMqHzjCJsOHgGuyB3sWXaUSv/Krm0BdzjuI1rtkjCbL1l1oHJx+cHyVRJhyuEz0\" crossorigin=\"anonymous\"></script><style hx-preserve=\"true\">\n\t\t\t\t#container {\n\t\t\t\t\tborder: 2px solid black;\n\t\t\t\t}\n\t\t\t</style></head><body hx-boost=\"true\" hx-ext=\"head-support\"><div id=\"page\"><a href=\"/\">home</a> <a href=\"/about\">about</a>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -75,7 +75,7 @@ func Page(content templ.Component, username string) templ.Component {
 		var templ_7745c5c3_Var3 string
 		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(username)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/page.templ`, Line: 30, Col: 27}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/page.templ`, Line: 33, Col: 27}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 		if templ_7745c5c3_Err != nil {
@@ -373,7 +373,7 @@ func FavoriteSongForm(errors []string) templ.Component {
 		var templ_7745c5c3_Var13 string
 		templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(strings.Join(errors, ", "))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/page.templ`, Line: 89, Col: 35}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/page.templ`, Line: 92, Col: 35}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 		if templ_7745c5c3_Err != nil {
