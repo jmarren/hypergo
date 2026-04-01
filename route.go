@@ -1,7 +1,6 @@
 package hypergo
 
 import (
-	"fmt"
 	"net/http"
 	"strings"
 )
@@ -52,8 +51,6 @@ func (route *route) Wrappers(currentPath string) []ComponentWrapper {
 	ancestors := route.ancestors()
 
 	for _, router := range ancestors {
-		fmt.Printf("currentPath = %s\n", currentPath)
-		fmt.Printf("router.Path = %s\n", router.Path)
 		currentPath, found = strings.CutPrefix(currentPath, router.Path)
 		if !found || currentPath == "" {
 			wrappers = append([]ComponentWrapper{router.Wrapper}, wrappers...)
